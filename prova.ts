@@ -117,24 +117,72 @@ class PostagemAvancada extends Postagem{
     
 }
 
-//repositório de perfil
+class RepositorioDePerfis {
 
+    private _perfis: Perfil[];
+
+    constructor() {
+        this._perfis = []
+    }
+
+    incluir(perfil: Perfil): void {
+        //verificar se existe o perfil
+        for (let item of this._perfis) {
+            if (
+                (item.id === undefined || item.id == perfil.id) ||
+                (item.nome === undefined || item.nome == perfil.nome) ||
+                (item.email === undefined || item.email == perfil.email)
+            ) {
+                console.log(" Pefil ja existe!");
+                return
+            }
+        }
+        this._perfis.push(perfil)
+        console.log(`Perfil: ${perfil.id} adicionado !`);
+    }
+
+    // consulta a exisetncia de um perfil a partir de um parametro e retorna o perfil ou null
+   consultar(id?: number, nome?: String, email?: String): Perfil[] | null {
+
+        let resultadoPerfil: Perfil[] = [];
+
+        for (let item of this._perfis) {
+            // considera a inserção ou não de parametros 
+            if (
+                (id === undefined || id === item.id) &&
+                (nome === undefined || nome === item.nome) &&
+                (email === undefined || email === item.email)) {
+
+                resultadoPerfil.push(item);
+            }
+        }
+
+        if (resultadoPerfil.length != 0) {
+            return resultadoPerfil;
+        } else {
+            return null
+        }
+
+    }
+}
+
+//ajeitei--------------------------
 class RepositorioDePostagens{
     postagens: Postagem[];
 
     incluir(postagem: Postagem): void{
         let PostagemJaExiste = this.consultar(postagem.id, postagem.texto)
 
-        if(PostagemJaExiste == -1){
+        if(PostagemJaExiste == null){
             this.postagens.push(postagem);
         }else{
             console.log("Postagem já existente!");
             
         }
     }
-
-    consultar(id?: number, texto?: string, hashtag?: string, perfil?: Perfil) {
-        let postagensEncontradas: Postagem[] = [];
+//ajeitei----------------------------
+    consultar(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem {
+        let postagensEncontrada: Postagem
       
         for (let item of this.postagens) {
             if (
@@ -145,16 +193,70 @@ class RepositorioDePostagens{
                 : true) && // Verifica se é uma instância de PostagemAvancada
               (perfil === undefined || item.perfil === perfil)
             ) {
-              postagensEncontradas.push(item);
-            }
-        }
+                postagensEncontrada = item;
+                return postagensEncontrada;
 
-        if(postagensEncontradas == null){
-            return -1
-        }else{
-            return postagensEncontradas;
+            }
         }
       
       }
 }
+
+class RedeSocial {
+
+    constructor
+        (   private _RepositorioDePostagens: RepositorioDePostagens,
+            private _RepositorioDePerfis: RepositorioDePerfis) { }
+
+    //i
+    incluirPerfil(perfil: Perfil): void {
+        this._RepositorioDePerfis.incluir(perfil);
+    }
+    //ii
+    consultarPerfil(id: number, nome: string, email: string): Perfil[] | null {
+        return this._RepositorioDePerfis.consultar(id, nome, email)
+    }
+    //iii
+    incluirPostagem(postagem: Postagem): void {
+        return this._RepositorioDePostagens.incluir(postagem)
+    }
+    //iv-----------ajeitei--------------------------
+    consultarPostagens(id?: number, texto?: string, hashtag?: string, perfil?:
+        Perfil): Postagem{
+            return this._RepositorioDePostagens.consultar(id,texto,hashtag,perfil)
+    }
+    //v----------- ajeitei-----------------------------
+    curtir(idPostagem: number): void{
+        const postagem = this._RepositorioDePostagens.consultar(idPostagem);
+        if (postagem) {
+            postagem.curtir(); 
+            console.log(`Você curtiu a postagem com ID ${idPostagem}`);
+        } else {
+            console.log(`Postagem com ID ${idPostagem} não encontrada`);
+        }
+    }
+    //vi--------------ajeitei-----------------------------
+    descurtir(idPostagem: number): void{
+        const postagem = this._RepositorioDePostagens.consultar(idPostagem);
+        if (postagem) {
+            postagem.descurtir(); 
+            console.log(`Você descurtiu a postagem com ID ${idPostagem}`);
+        } else {
+            console.log(`Postagem com ID ${idPostagem} não encontrada`);
+        }
+    }
+    //vii
+    decrementarVisualizacoes(postagem: PostagemAvancada): void{
+        this.
+    }
+    //viii
+    exibirPostagensPorPerfil(id: number): Postagem[]{
+        //this.consultarPerfil(id)
+    }
+    ///ix
+    exibirPostagensPorHashtag(hashtag: string): PostagemAvancada[] {
+
+    }
+}
+
 
