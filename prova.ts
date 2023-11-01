@@ -1,25 +1,50 @@
+import { BlockList } from "node:net";
+import { stringify } from "node:querystring";
+import { it } from "node:test";
+
+import {question} from "readline-sync"
+
+
 class Perfil{
     private _id: number;
-    private _nome: String;
-    private _email: String;
+    private _nome:string;
+    private _email: string;
 
-    constructor(id: number, nome: String, email: String){
-        this._id = id;
+    constructor(id: number, nome: string, email: string) {
+       if(this.validaId(id)){
+            this._id = id;
+       } else {
+            throw new Error("ID deve ser do tipo numero")
+       }
+       if(this.validaNome(nome)){
+            this._nome = nome;
+       } else {
+            throw new Error(" Nome nao pode conter numeros e carecteres")
+       }
+       
         this._email = email;
-        this._nome = nome;
+        
     }
 
-    get id(){
+    get id() {
         return this._id
     }
 
-    get nome(){
+    get nome() {
         return this._nome
     }
 
-    get email(){
+    get email() {
         return this._email
     }
+
+    private validaId(id: number): boolean {
+        return typeof id === 'number';
+    }
+    private validaNome (nome: string){
+        return typeof nome === 'string'
+    }
+
 }
 
 class Postagem{
@@ -82,7 +107,7 @@ class Postagem{
 
 class PostagemAvancada extends Postagem{
     private _hashtags: string[];
-    private _visualizacoesRestantes: number
+    private _visualizacoesRestantes: number;
 
     constructor(
             id: number,texto: string, curtidas: number,
@@ -93,6 +118,10 @@ class PostagemAvancada extends Postagem{
         this._hashtags = hashtag;
         this._visualizacoesRestantes = visualizacoesRestantes;
 
+    }
+
+    get visualizacoesRestantes(){
+        return this._visualizacoesRestantes;
     }
 
     adicionarHashtag(hashtag: string): void{
@@ -133,7 +162,7 @@ class RepositorioDePerfis {
                 (item.nome === undefined || item.nome == perfil.nome) ||
                 (item.email === undefined || item.email == perfil.email)
             ) {
-                console.log(" Pefil ja existe!");
+                console.log(" Perfil ja existe!");
                 return
             }
         }
@@ -168,7 +197,7 @@ class RepositorioDePerfis {
 
 //ajeitei--------------------------
 class RepositorioDePostagens{
-    postagens: Postagem[];
+    postagens: Postagem[] = [];
 
     incluir(postagem: Postagem): void{
         let PostagemJaExiste = this.consultar(postagem.id, postagem.texto)
@@ -181,8 +210,8 @@ class RepositorioDePostagens{
         }
     }
 //ajeitei----------------------------
-    consultar(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem {
-        let postagensEncontrada: Postagem
+    consultar(id?: number, texto?: string, hashtag?: string, perfil?: Perfil): Postagem[] | null {
+        let postagensEncontrada: Postagem[] = [];
       
         for (let item of this.postagens) {
             if (
@@ -193,13 +222,16 @@ class RepositorioDePostagens{
                 : true) && // Verifica se é uma instância de PostagemAvancada
               (perfil === undefined || item.perfil === perfil)
             ) {
-                postagensEncontrada = item;
-                return postagensEncontrada;
+                postagensEncontrada.push(item);
 
             }
         }
-      
-      }
+        if(postagensEncontrada.length != 0 ){
+            return postagensEncontrada;
+        }else{
+            return null;
+        }
+    }
 }
 
 class RedeSocial {
@@ -220,43 +252,173 @@ class RedeSocial {
     incluirPostagem(postagem: Postagem): void {
         return this._RepositorioDePostagens.incluir(postagem)
     }
-    //iv-----------ajeitei--------------------------
+    //iv-----------ok--------------------------
     consultarPostagens(id?: number, texto?: string, hashtag?: string, perfil?:
-        Perfil): Postagem{
+        Perfil): Postagem[] | null{
             return this._RepositorioDePostagens.consultar(id,texto,hashtag,perfil)
     }
-    //v----------- ajeitei-----------------------------
+    //v----------- ok-----------------------------
     curtir(idPostagem: number): void{
         const postagem = this._RepositorioDePostagens.consultar(idPostagem);
+
         if (postagem) {
-            postagem.curtir(); 
-            console.log(`Você curtiu a postagem com ID ${idPostagem}`);
+            for(let item of postagem){
+                item.curtir(); 
+                console.log(`Você curtiu a postagem com ID ${idPostagem}`);
+            }
         } else {
             console.log(`Postagem com ID ${idPostagem} não encontrada`);
         }
     }
-    //vi--------------ajeitei-----------------------------
+    //vi-ok
     descurtir(idPostagem: number): void{
         const postagem = this._RepositorioDePostagens.consultar(idPostagem);
+
         if (postagem) {
-            postagem.descurtir(); 
-            console.log(`Você descurtiu a postagem com ID ${idPostagem}`);
+            for(let item of postagem){
+                item.descurtir(); 
+                console.log(`Você descurtiu a postagem com ID ${idPostagem}`);
+            }
         } else {
             console.log(`Postagem com ID ${idPostagem} não encontrada`);
         }
     }
     //vii
     decrementarVisualizacoes(postagem: PostagemAvancada): void{
-        this.
-    }
-    //viii
-    exibirPostagensPorPerfil(id: number): Postagem[]{
-        //this.consultarPerfil(id)
-    }
-    ///ix
-    exibirPostagensPorHashtag(hashtag: string): PostagemAvancada[] {
+        const postagens = this._RepositorioDePostagens.consultar(postagem.id)
 
+        if(postagens){
+            for(let item of postagens){
+                if(item instanceof PostagemAvancada){
+                    item.decrementarVisualizacoes();
+                    console.log('Vizualização decrementada!');
+                    
+                }
+            }
+        }else{
+            console.log("Postagem não econtrada!");
+            
+        }
+    }
+    //viii---tem que ajeitar!!!!!!!!!!!!!!!!!
+    exibirPostagensPorPerfil(id: number): Postagem[] | null {
+        const postagens = this.consultarPostagens(id);
+        
+        if(postagens != null){
+            for (let item of postagens) {
+                if (item instanceof PostagemAvancada) {
+                    item.decrementarVisualizacoes();
+                }
+            }
+        }
+        
+        
+        // Filtrando as postagens que ainda podem ser decrementadas
+        if(postagens != null){
+            const filtroPostagens = postagens.filter((item) => {
+                if (item instanceof PostagemAvancada) {
+                    return item.visualizacoesRestantes > 0;
+                }
+                return true;
+            })
+        
+            
+            return filtroPostagens;
+        }
+
+        return null;
+        
+    }
+
+    ///ix
+    exibirPostagensPorHashtag(hashtag: string): PostagemAvancada[] | null {
+        const postagens = this._RepositorioDePostagens.consultar(undefined,undefined,hashtag);
+
+        if(postagens != null){
+            for(let item of postagens){
+                if(item instanceof PostagemAvancada){
+                    item.decrementarVisualizacoes();
+                }
+            }
+        }
+
+        // Filtrando as postagens que ainda podem ser decrementadas
+        const filtroPostagens: PostagemAvancada[] = [];
+        if(postagens != null){
+            for(let item of postagens){
+                if(item instanceof PostagemAvancada && item.visualizacoesRestantes > 0){
+                    filtroPostagens.push(item);
+                }
+            }            
+            return filtroPostagens;
+        }else{
+            
+            return null;
+        }
+
+        
     }
 }
+
+// Criando App;
+
+class  App {
+
+    private _RedeSocial: RedeSocial
+
+    constructor(RedeSocial: RedeSocial) { 
+        this._RedeSocial = RedeSocial
+    }
+
+    Menu():void {
+        const opcoes = [
+            '1. Criar Perfil',
+            '1. Incluir Perfil',
+            '2. Consultar Perfil',
+            '3. Incluir Postagem',
+            '4. Consultar Postagens',
+            '5. Exibir Postagens por Perfil',
+            '6. Sair'
+        ]
+        console.log('Bem-vindo ao sistema da Rede Social.');
+
+        opcoes.forEach(opcao => console.log(opcao));
+        let escolha = question(" Digite a opcao: ");
+
+        this.opcoes(escolha);
+
+    };
+
+    opcoes(opcao : string): void{
+        switch (opcao) {
+            case '1':
+                console.log(`Digi`);
+                
+                break;
+            case '2':
+                
+                break;
+            case '3':
+                
+                break;
+            case '4':
+                
+                break;
+            case '5':
+                
+                break;
+            case '6':
+                console.log(`Obrigado por usar nossa RedeSocia!`);
+                  
+                break;
+            default:
+                console.log('Opção inválida. Tente novamente.');
+                this.Menu();
+        }
+    }
+
+    
+}
+
 
 
