@@ -300,7 +300,7 @@ class RedeSocial {
             
         }
     }
-    //viii---tem que ajeitar!!!!!!!!!!!!!!!!!
+    //viii
     exibirPostagensPorPerfil(id: number): Postagem[] | null {
         const postagens = this.consultarPostagens(id);
         
@@ -393,7 +393,11 @@ class  App {
         switch (opcao) {
             case '1':
                 console.log(`Digi`);
-                
+                console.log(`Crie um novo perfil!`);
+                const novoPerfil = criarPerfil();
+                this._RedeSocial.incluirPerfil(novoPerfil)
+                console.log(`Perfil: ${novoPerfil.id} criado com sucesso!`);   
+
                 break;
             case '2':
                 
