@@ -171,6 +171,21 @@ class RepositorioDePostagens {
         }
         return todasPostagens;
     }
+    excluirPostagem(id) {
+        let postagem = this.consultar(id);
+        if (postagem != null) {
+            for (let item of postagem) {
+                let index = this.Postagens.indexOf(item);
+                if (index !== -1) {
+                    this.Postagens.splice(index, 1); // Remove o perfil na posição 'index'
+                    console.log(`Postagem com ID ${id} excluído com sucesso.`);
+                }
+            }
+        }
+        else {
+            console.log(`Postagem com ID ${id} não encontrado.`);
+        }
+    }
 }
 class RepositorioDePerfis {
     constructor() {
@@ -200,6 +215,23 @@ class RepositorioDePerfis {
             }
         }
         return null;
+    }
+    //excluir perfil
+    excluirPerfil(id) {
+        let perfil = this.consultar(id);
+        if (perfil != null) {
+            let index = this._perfis.indexOf(perfil);
+            if (index !== -1) {
+                this._perfis.splice(index, 1); // Remove o perfil na posição 'index'
+                console.log(`Perfil com ID ${id} excluído com sucesso.`);
+            }
+            else {
+                console.log(`Perfil com ID ${id} não encontrado no array.`);
+            }
+        }
+        else {
+            console.log(`Perfil com ID ${id} não encontrado.`);
+        }
     }
 }
 class RedeSocial {
@@ -331,6 +363,15 @@ class RedeSocial {
     exibirTodasAsPostagens() {
         return this._RepositorioDePostagens.listarTodasAsPostagens();
     }
+    //hashtags mais populares
+    //excluir rede social
+    excluirPerfil(id) {
+        return this._RepositorioDePerfis.excluirPerfil(id);
+    }
+    //excluir postagem
+    excluirPostagem(id) {
+        return this._RepositorioDePostagens.excluirPostagem(id);
+    }
     // iniciei agora
     carregarPefis() {
         const arquivo = fs.readFileSync(this.ArquivoPerfil, 'utf-8');
@@ -376,12 +417,14 @@ class App {
                 '9. Postagens Populares',
                 '10. Hashtags mais populares',
                 '11. Listar todas as postagens',
-                '12. Sair',
+                '12. Excluir um perfil',
+                '13. Apagar Postagem',
+                '14. Sair',
             ];
             console.log('\nBem-vindo ao sistema da Rede Social.');
             opcoes.forEach((opcao) => console.log(opcao));
             let escolha = (0, readline_sync_1.question)('Digite a opção: ');
-            if (escolha === '12') {
+            if (escolha === '14') {
                 console.log('Obrigado por usar nossa Rede Social!\n');
                 break; // Sai do loop enquanto o usuário escolhe '9'.
             }
@@ -487,7 +530,15 @@ class App {
                 const opcao11 = this._RedeSocial.exibirTodasAsPostagens();
                 MostrarPostagens(opcao11);
                 break;
-            case '12':
+            case '12': //excluir perfil
+                const opcao12 = parseInt((0, readline_sync_1.question)('Qual o ID do Perfil: '));
+                this._RedeSocial.excluirPerfil(opcao12);
+                break;
+            case '13': //excluir postagem
+                const opcao13 = parseInt((0, readline_sync_1.question)('Qual o ID da postagem: '));
+                this._RedeSocial.excluirPostagem(opcao13);
+                break;
+            case '14':
                 console.log(`Obrigado por usar nossa RedeSocia!`);
                 break;
             default:
@@ -505,7 +556,7 @@ function DadosPerfil() {
 }
 function mostrarPerfil(perfil) {
     if (perfil !== null) {
-        console.log(`Dados do Perfil:`);
+        console.log(`>>Dados do Perfil:`);
         console.log(`\nId: ${perfil.id}`);
         console.log(`Nome ${perfil.nome}`);
         console.log(`e-mail: ${perfil.email}\n `);
@@ -525,7 +576,7 @@ function DadosPostagem() {
     const perfil = repositorioDePerfis.consultar(idPerfil);
     if (perfil != null) {
         //se for avançada
-        const avancadaOuN = parseInt((0, readline_sync_1.question)("Deseja adicionar hashtags e visualizações? 1- SIM 2-NÃO"));
+        const avancadaOuN = parseInt((0, readline_sync_1.question)("Deseja adicionar hashtags e visualizações? 1- SIM 2-NÃO "));
         if (avancadaOuN == 1) {
             const hashtag = (0, readline_sync_1.question)("Digite a hashtag: ");
             const visualizacoes = parseInt((0, readline_sync_1.question)("Digite o numero de visualizações: "));
