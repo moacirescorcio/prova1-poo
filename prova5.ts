@@ -9,6 +9,8 @@ class Perfil {
     private _id: number;
     private _nome:string;
     private _email: string;
+    private _seguindo: number[];  // Array de IDs dos perfis que este perfil está seguindo
+    private _seguidores: number[];
     
 
     constructor(id: number, nome: string, email: string) {
@@ -24,7 +26,16 @@ class Perfil {
        }
        
         this._email = email;
+        this._seguidores = [];
+        this._seguindo = [];
         
+    }
+
+    get seguidores() {
+        return this._seguidores
+    }
+    get seguindo() {
+        return this._seguindo
     }
 
     get id() {
@@ -159,10 +170,12 @@ class RepositorioDePostagens{
     Postagens: Postagem[] = [];
 
     incluir(postagem: Postagem): void{
-        let PostagemJaExiste = this.consultar(postagem.id, postagem.texto)
+        let PostagemJaExiste = this.consultar(postagem.id)
 
-        if(PostagemJaExiste == null){
+        if(PostagemJaExiste === null){
             this.Postagens.push(postagem);
+            console.log("Postagem inserida!");
+            
         }else{
             console.log("Postagem já existente!\n");
             
@@ -221,6 +234,9 @@ class RepositorioDePostagens{
             console.log(`Postagem com ID ${id} não encontrado.`);
         }
     }
+
+    
+    
 }
 
 class RepositorioDePerfis {
@@ -431,6 +447,10 @@ class RedeSocial {
     }
 
     //hashtags mais populares
+    
+    
+
+   
 
     //excluir rede social
     excluirPerfil(id: number){
@@ -440,6 +460,27 @@ class RedeSocial {
     //excluir postagem
     excluirPostagem(id: number){
         return this._RepositorioDePostagens.excluirPostagem(id);
+    }
+
+    //seguir perfil
+    seguirPerfil(idPerfilSeguidor: number, idPerfilSeguido: number): void {
+        const perfilSeguidor = this._RepositorioDePerfis.consultar(idPerfilSeguidor);
+        const perfilSeguido = this._RepositorioDePerfis.consultar(idPerfilSeguido);
+    
+        if (perfilSeguidor && perfilSeguido) {
+            if (perfilSeguidor.seguindo.includes(idPerfilSeguido)) {
+                console.log(`Você já está seguindo o perfil com ID ${idPerfilSeguido}.`);
+            } else {
+                perfilSeguidor.seguindo.push(idPerfilSeguido);
+    
+                perfilSeguido.seguidores.push(idPerfilSeguidor);
+    
+                
+                console.log(`Você seguiu o perfil com ID ${idPerfilSeguido}.`);
+            }
+        } else {
+            console.log("Perfis não encontrados. Certifique-se de que ambos os perfis existam.");
+        }
     }
 
 
@@ -486,7 +527,7 @@ class App {
         while (true) {
             const opcoes = [
                 '1. Criar Perfil',// Funcionando
-                '2. Consultar Perfil',//Funcionando
+                '2. Consultar Perfil',//
                 '3. Postagens:',
                 '    a. Criar Postagem',//Funcionando
                 '    b. Consultar Postagem',//Funcionando parcial...não foram testados todas as opçãoes
@@ -500,14 +541,15 @@ class App {
                 '11. Listar todas as postagens',//Funcionando
                 '12. Excluir um perfil',//Funcionando
                 '13. Apagar Postagem',//Funcionando
-                '14. Sair',
+                '14. Seguir Perfil',//funcionando
+                '15. Sair',
             ];
             console.log('\nBem-vindo ao sistema da Rede Social.');
 
             opcoes.forEach((opcao) => console.log(opcao));
             let escolha = question('Digite a opção: ');
 
-            if (escolha === '14') {
+            if (escolha === '15') {
                 console.log('Obrigado por usar nossa Rede Social!\n');
                 break; // Sai do loop enquanto o usuário escolhe '9'.
             } else {
@@ -541,13 +583,6 @@ class App {
                 if (escolha === 1) {
                     const novaPostagem = DadosPostagem();
                     let Post = this._RedeSocial.incluirPostagem(novaPostagem);
-                    if(Post != null){
-                        console.log("Postagem Inserida com sucesso!");
-                        
-                    }else{
-                        console.log("Postagem não inserida!");
-                        
-                    }
                     //return menu
                 } else if (escolha == 2) {
                     // funcionando: opção 1 e 4 
@@ -612,8 +647,9 @@ class App {
                 break;
             case '10': //hashtags mais populares
                 
-
+                
                 break;
+
             case '11'://listar todas as postagens
                 console.log("\nFeed de Postagens: ");
                 const opcao11 = this._RedeSocial.exibirTodasAsPostagens();
@@ -629,7 +665,12 @@ class App {
                 const opcao13 = parseInt(question('Qual o ID da postagem: '));
                 this._RedeSocial.excluirPostagem(opcao13);
                 break;
-            case '14':
+            case '14': //seguir perfil
+                const idPerfilSeguidor = parseInt(question('Digite o ID do perfil seguidor: '));
+                const idPerfilSeguido = parseInt(question('Digite o ID do perfil que deseja seguir: '));
+                this._RedeSocial.seguirPerfil(idPerfilSeguidor, idPerfilSeguido);
+                break;
+            case '15':
                 console.log(`Obrigado por usar nossa RedeSocia!`);
 
                 break;
@@ -653,11 +694,14 @@ function DadosPerfil(): Perfil {
 function mostrarPerfil(perfil:Perfil | null): void{
      
     if(perfil!==null){
-        console.log(`>>Dados do Perfil:`);
+        console.log(`\n>>Dados do Perfil:`);
         
-        console.log(`\nId: ${perfil.id}`);
+        console.log(`Id: ${perfil.id}`);
         console.log(`Nome ${perfil.nome}`);
-        console.log(`e-mail: ${perfil.email}\n `);
+        console.log(`e-mail: ${perfil.email} `);
+        console.log(`Seguindo: ${perfil.seguindo.length}`);
+        console.log(`Seguidores: ${perfil.seguidores.length}\n`);
+        
     } else{
         console.log(`Perfil nao encontrado!\n`);
         
@@ -682,7 +726,7 @@ function DadosPostagem(): Postagem {
             const hashtag = question("Digite a hashtag: ")
             const visualizacoes = parseInt(question("Digite o numero de visualizações: "))
 
-            const novaPostagemAvancada = new PostagemAvancada(id,   texto,curtidas,descurtidas,data,perfil,hashtag,visualizacoes);
+            const novaPostagemAvancada = new PostagemAvancada(id,texto,curtidas,descurtidas,data,perfil,hashtag,visualizacoes);
             return novaPostagemAvancada;
         }else{
             const novaPostagem = new Postagem(id, texto, curtidas, descurtidas,data, perfil);
@@ -716,6 +760,11 @@ function MostrarPostagens(postagens: Postagem[] | null): void {
         }
     }
 }
+
+
+
+
+
 function slavarArquivo =
 // sugestão de função Apagar perfil
 //apagar postagem
