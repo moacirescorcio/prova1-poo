@@ -154,9 +154,9 @@ class RepositorioDePostagens {
         }
         this.Postagens.push(postagem);
     }
-    // Modifique o tipo de perfil para number
     consultar(id, texto, hashtag, perfil) {
         let postagensEncontrada = [];
+        let postagensResultado = [];
         for (let item of this.Postagens) {
             if ((id === undefined || item.id === id) &&
                 (texto === undefined || item.texto === texto) &&
@@ -177,11 +177,6 @@ class RepositorioDePostagens {
     listarTodasAsPostagens() {
         const todasPostagens = [];
         for (let item of this.Postagens) {
-            if (item instanceof PostagemAvancada) {
-                if (item.visualizacoesRestantes === 0) {
-                    continue; // Não adiciona postagens avançadas com 0 visualizações
-                }
-            }
             todasPostagens.push(item);
         }
         return todasPostagens;
@@ -216,7 +211,7 @@ class RepositorioDePerfis {
         this._perfis.push(perfil);
     }
     consultar(id, nome, email) {
-        if (isNaN(id)) {
+        if (isNaN(id)) { // retorna o perfil sem ser passado o parametro id
             for (let item of this._perfis) {
                 if ((nome === undefined || nome === item.nome || nome === '') &&
                     (email === undefined || email === item.email || email === '')) {
@@ -224,7 +219,7 @@ class RepositorioDePerfis {
                 }
             }
         }
-        else {
+        else { //retorna o perfil para a demais situações
             for (let item of this._perfis) {
                 if ((id === undefined || id === item.id) &&
                     (nome === undefined || nome === item.nome || nome === '') &&
@@ -275,11 +270,11 @@ class RedeSocial {
     incluirPostagem(postagem) {
         return this._RepositorioDePostagens.incluirPostagem(postagem);
     }
-    //iv
+    //iv–ok
     consultarPostagens(id, texto, hashtag, perfil) {
         return this._RepositorioDePostagens.consultar(id, texto, hashtag, perfil);
     }
-    //v
+    //v----------- ok-----------------------------
     curtir(idPostagem) {
         const postagem = this._RepositorioDePostagens.consultar(idPostagem);
         if (postagem) {
@@ -292,7 +287,7 @@ class RedeSocial {
             console.log(`Postagem com ID ${idPostagem} não encontrada\n`);
         }
     }
-    //vi
+    //vi-ok
     descurtir(idPostagem) {
         const postagem = this._RepositorioDePostagens.consultar(idPostagem);
         if (postagem) {
@@ -321,7 +316,7 @@ class RedeSocial {
         }
     }
     exibirPostagensPorPerfil(id) {
-        // ok
+        // ok -funcionando
         const postagens = this._RepositorioDePostagens.consultar(undefined, undefined, undefined, id);
         if (postagens) {
             const postagensFiltradas = [];
@@ -367,12 +362,14 @@ class RedeSocial {
     }
     carregarDeArquivo() {
         //Importando os arquivos
+        let contadorDadosLidos = 0;
         const dadosPerfis = fs.readFileSync(this.ArquivoPerfil, 'utf-8');
         const dadosPostagens = fs.readFileSync(this.ArquivoPostagem, 'utf-8');
         const dadosPostagensAvancadas = fs.readFileSync(this.ArquivoPostagemAvancada, 'utf-8');
         const linhasPerfis = dadosPerfis.split('\n');
         const linhasPostagens = dadosPostagens.split('\n');
         const linhasPostagensAvancadas = dadosPostagensAvancadas.split('\n');
+        contadorDadosLidos += linhasPerfis.length + linhasPostagens.length + linhasPostagensAvancadas.length;
         for (let linha of linhasPerfis) {
             const perfilData = linha.split(';');
             if (perfilData.length > 0) {
@@ -423,6 +420,7 @@ class RedeSocial {
                 }
             }
         }
+        console.log(`${contadorDadosLidos} dados foram lidos.`);
     }
     salvarEmArquivo() {
         try {
@@ -466,7 +464,6 @@ class RedeSocial {
     exibirTodasAsPostagens() {
         return this._RepositorioDePostagens.listarTodasAsPostagens();
     }
-    //excluir perfil
     excluirPerfil(id) {
         return this._RepositorioDePerfis.excluirPerfil(id);
     }
@@ -493,7 +490,6 @@ class RedeSocial {
         }
     }
 }
-// Criando App;
 class App {
     constructor(RedeSocial) {
         this._RedeSocial = RedeSocial;
@@ -716,7 +712,7 @@ function DadosPostagem() {
     if (perfil != null) {
         const avancadaOuN = parseInt((0, readline_sync_1.question)("Deseja adicionar hashtags e visualizações? 1- SIM 2-NÃO"));
         if (avancadaOuN == 1) {
-            const hashtag = [(0, readline_sync_1.question)("Digite a hashtag: ")];
+            const hashtag = [(0, readline_sync_1.question)("Digite a hashtag: ")]; // Correção realizada aqui, agora hashtag é um array de string
             const visualizacoes = parseInt((0, readline_sync_1.question)("Digite o numero de visualizações: "));
             const novaPostagemAvancada = new PostagemAvancada(id, texto, curtidas, descurtidas, data, perfil, hashtag, visualizacoes);
             return novaPostagemAvancada;
@@ -731,6 +727,7 @@ function DadosPostagem() {
         throw new Error(`Perfil não associado!\n`);
     }
 }
+// Função ajustada --- adicionei parte avançada
 function MostrarPostagens(postagens) {
     if (postagens == null) {
         console.log("Nenhuma postagem encontrada!\n");
@@ -750,7 +747,6 @@ function MostrarPostagens(postagens) {
         }
     }
 }
-//teste
 const repositorioDePostagens = new RepositorioDePostagens();
 const repositorioDePerfis = new RepositorioDePerfis();
 const redeSocial = new RedeSocial(repositorioDePostagens, repositorioDePerfis);

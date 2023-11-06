@@ -6,7 +6,7 @@ class Perfil {
     private _id: number;
     private _nome: string;
     private _email: string;
-    private _seguindo: number[];  // Array de IDs dos perfis que este perfil está seguindo
+    private _seguindo: number[];  
     private _seguidores: number[];
 
     constructor(id: number, nome: string, email: string) {
@@ -182,10 +182,9 @@ class RepositorioDePostagens {
 
     }
 
-   
-    // Modifique o tipo de perfil para number
     consultar(id?: number, texto?: string, hashtag?: string, perfil?: number): Postagem[] | null {
         let postagensEncontrada: Postagem[] = [];
+        let postagensResultado: Postagem[] = [];
 
         for (let item of this.Postagens) {
             if (
@@ -196,6 +195,7 @@ class RepositorioDePostagens {
                     : true) && // Verifica se é uma instância de PostagemAvancada
                 (perfil === undefined || item.perfil.id === perfil)
             ) {
+            
                 postagensEncontrada.push(item);
 
             }
@@ -205,19 +205,13 @@ class RepositorioDePostagens {
             return postagensEncontrada;
         } else {
             return null;
-        }
     }
+}
 
     listarTodasAsPostagens(): Postagem[] {
         const todasPostagens: Postagem[] = [];
 
         for (let item of this.Postagens) {
-            if (item instanceof PostagemAvancada) {
-                if (item.visualizacoesRestantes === 0) {
-                    continue; // Não adiciona postagens avançadas com 0 visualizações
-                }
-            }
-            
             todasPostagens.push(item);
         }
 
@@ -235,7 +229,6 @@ class RepositorioDePostagens {
                     console.log(`Postagem com ID ${id} excluído com sucesso.`);
                 }
             }
-
 
         } else {
             console.log(`Postagem com ID ${id} não encontrado.`);
@@ -265,14 +258,14 @@ class RepositorioDePerfis {
     }
 
     consultar(id?: number, nome?: string, email?: string): Perfil | null {
-        if (isNaN(id)) {
+        if (isNaN(id)) {// retorna o perfil sem ser passado o parametro id
             for (let item of this._perfis) {
                 if ((nome === undefined || nome === item.nome || nome === '') &&
                     (email === undefined || email === item.email || email === '')) {
                     return item;
                 }
             }
-        } else {
+        } else {//retorna o perfil para a demais situações
             for (let item of this._perfis) {
                 if ((id === undefined || id === item.id) &&
                     (nome === undefined || nome === item.nome || nome === '') &&
@@ -329,11 +322,11 @@ class RedeSocial {
     incluirPostagem(postagem: Postagem): void {
         return this._RepositorioDePostagens.incluirPostagem(postagem)
     }
-    //iv
+    //iv–ok
     consultarPostagens(id?: number, texto?: string, hashtag?: string, perfil?: number): Postagem[] | null {
         return this._RepositorioDePostagens.consultar(id, texto, hashtag, perfil)
     }
-    //v
+    //v----------- ok-----------------------------
     curtir(idPostagem: number): void {
         const postagem = this._RepositorioDePostagens.consultar(idPostagem);
 
@@ -347,7 +340,7 @@ class RedeSocial {
         }
     }
 
-    //vi
+    //vi-ok
     descurtir(idPostagem: number): void {
         const postagem = this._RepositorioDePostagens.consultar(idPostagem);
 
@@ -370,17 +363,15 @@ class RedeSocial {
                 if (item instanceof PostagemAvancada) {
                     item.decrementarVisualizacoes();
                     console.log('Vizualização decrementada!\n');
-
                 }
             }
         } else {
             console.log("Postagem não econtrada!");
-
         }
     }
 
     exibirPostagensPorPerfil(id: number): Postagem[] | null {
-        // ok
+        // ok -funcionando
         const postagens = this._RepositorioDePostagens.consultar(undefined, undefined, undefined, id);
 
         if (postagens) {
@@ -436,6 +427,7 @@ class RedeSocial {
 
     carregarDeArquivo() {
         //Importando os arquivos
+        let contadorDadosLidos = 0;
 
         const dadosPerfis: string = fs.readFileSync(this.ArquivoPerfil, 'utf-8');
         const dadosPostagens: string = fs.readFileSync(this.ArquivoPostagem, 'utf-8');
@@ -444,7 +436,9 @@ class RedeSocial {
         const linhasPerfis: string[] = dadosPerfis.split('\n');
         const linhasPostagens: string[] = dadosPostagens.split('\n');
         const linhasPostagensAvancadas: string[] = dadosPostagensAvancadas.split('\n');
-
+        
+        contadorDadosLidos += linhasPerfis.length + linhasPostagens.length + linhasPostagensAvancadas.length;
+        
         for (let linha of linhasPerfis) {
             const perfilData: string[] = linha.split(';');
             if (perfilData.length > 0) {
@@ -500,6 +494,7 @@ class RedeSocial {
                 }
             }
         }
+        console.log(`${contadorDadosLidos} dados foram lidos.`);
     }
 
     salvarEmArquivo(): void {
@@ -551,8 +546,6 @@ class RedeSocial {
         return this._RepositorioDePostagens.listarTodasAsPostagens();
     }
 
-
-    //excluir perfil
     excluirPerfil(id: number) {
         return this._RepositorioDePerfis.excluirPerfil(id);
     }
@@ -585,8 +578,6 @@ class RedeSocial {
 
 }
 
-
-// Criando App;
 
 class App {
     private _RedeSocial: RedeSocial;
@@ -815,7 +806,6 @@ function mostrarPerfil(perfil: Perfil | null): void {
     }
 }
 
-
 function DadosPostagem(): Postagem {
     const id = parseInt(question("Digite o ID postagem: "));
     const texto = question("Digite texto: ");
@@ -830,7 +820,7 @@ function DadosPostagem(): Postagem {
         const avancadaOuN = parseInt(question("Deseja adicionar hashtags e visualizações? 1- SIM 2-NÃO"))
 
         if (avancadaOuN == 1) {
-            const hashtag = [question("Digite a hashtag: ")]; 
+            const hashtag = [question("Digite a hashtag: ")]; // Correção realizada aqui, agora hashtag é um array de string
             const visualizacoes = parseInt(question("Digite o numero de visualizações: "))
 
             const novaPostagemAvancada = new PostagemAvancada(id, texto, curtidas, descurtidas, data, perfil, hashtag, visualizacoes);
@@ -845,7 +835,7 @@ function DadosPostagem(): Postagem {
     }
 }
 
-
+// Função ajustada --- adicionei parte avançada
 function MostrarPostagens(postagens: Postagem[] | null): void {
     if (postagens == null) {
         console.log("Nenhuma postagem encontrada!\n");
@@ -868,7 +858,6 @@ function MostrarPostagens(postagens: Postagem[] | null): void {
 }
 
 
-//teste
 const repositorioDePostagens = new RepositorioDePostagens();
 const repositorioDePerfis = new RepositorioDePerfis();
 const redeSocial = new RedeSocial(repositorioDePostagens, repositorioDePerfis);
